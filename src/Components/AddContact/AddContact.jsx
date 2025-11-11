@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./AddContact.module.css";
+import ConfirmModal from "./ConfirmModal"; // 👈 ایمپورت مودال جدید
 
 function AddContact({
   contacts,
@@ -13,6 +14,31 @@ function AddContact({
 }) {
   const navigate = useNavigate();
   const [hoveredIndex, setHoveredIndex] = useState(null);
+
+  // برای مودال
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [contactToDelete, setContactToDelete] = useState(null);
+
+  // وقتی کاربر روی دکمه حذف کلیک می‌کند
+  const handleDeleteClick = (index) => {
+    setContactToDelete(index);
+    setShowConfirm(true);
+  };
+
+  // تأیید حذف
+  const confirmDelete = () => {
+    if (contactToDelete !== null) {
+      onDelete(contactToDelete);
+    }
+    setShowConfirm(false);
+    setContactToDelete(null);
+  };
+
+  // لغو حذف
+  const cancelDelete = () => {
+    setShowConfirm(false);
+    setContactToDelete(null);
+  };
 
   return (
     <div>
@@ -90,7 +116,7 @@ function AddContact({
                 <div className={styles.cardActions}>
                   <button
                     className={`${styles.iconButton} ${styles.delete}`}
-                    onClick={() => onDelete(index)}
+                    onClick={() => handleDeleteClick(index)} // ← اینجا مودال فعال می‌شه
                   >
                     <i className="fa-solid fa-trash"></i>
                   </button>
@@ -134,6 +160,15 @@ function AddContact({
           ))}
         </div>
       </div>
+
+      {/* ✅ نمایش مودال تأیید حذف */}
+      {showConfirm && (
+        <ConfirmModal
+          message="Are you sure you want to delete this contact?"
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
+        />
+      )}
     </div>
   );
 }
