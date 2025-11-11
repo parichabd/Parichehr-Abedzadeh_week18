@@ -12,8 +12,8 @@ import Search from "./Components/Search/Search";
 
 function App() {
   const [contacts, setContacts] = useState(() => {
-    const stored = localStorage.getItem("contacts");
-    return stored ? JSON.parse(stored) : [];
+    const storedContacts = localStorage.getItem("contacts");
+    return storedContacts ? JSON.parse(storedContacts) : [];
   });
 
   const [editData, setEditData] = useState(null);
