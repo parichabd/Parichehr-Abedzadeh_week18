@@ -10,6 +10,9 @@ import UserInfo from "./Components/UserInfo/UserInfo";
 import Search from "./Components/Search/Search";
 import { ContactsProvider, useContacts } from "./Context/ContactsContext";
 
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 function HomePage() {
   const {
     filteredContacts,
@@ -32,7 +35,10 @@ function HomePage() {
 
   const handleDelete = (filteredIndex) => {
     const realIndex = mapFilteredIndexToOriginal(filteredIndex);
-    if (realIndex !== -1) deleteContact(realIndex);
+    if (realIndex !== -1) {
+      deleteContact(realIndex);
+      toast.success("Deleted successfully!");
+    }
   };
 
   const handleEdit = (filteredIndex, navigate) => {
@@ -46,11 +52,14 @@ function HomePage() {
   };
 
   const handleDeleteSelected = () => {
+    if (selectedContacts.length === 0) return;
     deleteSelected();
+    toast.success("Selected contacts deleted successfully!");
   };
 
   const handleDeleteAll = () => {
     deleteAll();
+    toast.success("All contacts have been deleted!");
   };
 
   return (
@@ -90,6 +99,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/add" element={<UserInfoWrapper />} />
         </Routes>
+        <ToastContainer position="top-right" autoClose={3000} />
       </Router>
     </ContactsProvider>
   );
