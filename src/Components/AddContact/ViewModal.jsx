@@ -1,15 +1,12 @@
 import styles from "./ViewModal.module.css";
 
 function ViewModal({ contact, onClose }) {
+  if (!contact) return null;
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
         {contact.img && (
-          <img
-            src={contact.img}
-            alt={contact.user}
-            className={styles.avatar}
-          />
+          <img src={contact.img} alt={contact.user} className={styles.avatar} />
         )}
         <h2 className={styles.userName}>{contact.user}</h2>
         <div className={styles.infoRow}>

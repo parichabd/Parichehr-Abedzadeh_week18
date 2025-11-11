@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserSecret } from "@fortawesome/free-solid-svg-icons";
-
 import styles from "./Nav.module.css";
+
 function Nav() {
   return (
     <div className={styles.navbar}>

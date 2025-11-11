@@ -1,7 +1,7 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ConfirmModal from "./ConfirmModal";
-import ViewModal from "./ViewModal";
+import ConfirmModal from "../AddContact/ConfirmModal";
+import ViewModal from "../AddContact/ViewModal";
 import styles from "./AddContact.module.css";
 
 function AddContact({
@@ -16,22 +16,19 @@ function AddContact({
   const navigate = useNavigate();
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
-
+  // برای مدال حذف تکی
   const [deleteIndex, setDeleteIndex] = useState(null);
-
+  // برای نمایش جزئیات
   const [viewContact, setViewContact] = useState(null);
 
   const confirmDelete = () => {
-    onDelete(deleteIndex);
+    if (typeof onDelete === "function") onDelete(deleteIndex);
     setDeleteIndex(null);
   };
-
   const cancelDelete = () => setDeleteIndex(null);
 
-
   const handleDeleteSelected = () => {
-    if (selectedContacts.length === 0) return;
-    onDeleteSelected();
+    if (typeof onDeleteSelected === "function") onDeleteSelected();
   };
 
   return (
@@ -40,7 +37,10 @@ function AddContact({
         <h1 className={styles.AddInfo}>Contact Manager</h1>
 
         <div>
-          <button className={styles.buttonInfo} onClick={() => navigate("/add")}>
+          <button
+            className={styles.buttonInfo}
+            onClick={() => navigate("/add")}
+          >
             + New
           </button>
 
@@ -54,7 +54,7 @@ function AddContact({
                 Delete All
               </button>
 
-              {selectedContacts.length > 0 && (
+              {selectedContacts && selectedContacts.length > 0 && (
                 <button
                   className={styles.buttonInfo}
                   onClick={handleDeleteSelected}
@@ -69,27 +69,30 @@ function AddContact({
       </div>
 
       <p className={styles.paragInfo}>
-        Welcome to contact list manager application. Please navigate through different areas.
+        Welcome to contact list manager application. Please navigate through
+        different areas.
       </p>
 
       <div className={styles.cardsContainer}>
         <div className={styles.cards}>
           {contacts.length === 0 && (
-            <p className={styles.cardParagraphNoContatct}>NO CONTACTS ADDED YET!!</p>
+            <p className={styles.cardParagraphNoContatct}>
+              NO CONTACTS ADDED YET!!
+            </p>
           )}
 
-          {contacts.map((contact, index) => (
+          {contacts.map((contact, idx) => (
             <div
-              key={index}
+              key={idx}
               className={styles.card}
-              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseEnter={() => setHoveredIndex(idx)}
               onMouseLeave={() => setHoveredIndex(null)}
               style={{ position: "relative" }}
             >
               <input
                 type="checkbox"
-                checked={selectedContacts.includes(index)}
-                onChange={() => onToggleSelect(index)}
+                checked={selectedContacts && selectedContacts.includes(idx)}
+                onChange={() => onToggleSelect(idx)}
                 style={{
                   position: "absolute",
                   top: "10px",
@@ -100,17 +103,17 @@ function AddContact({
                 }}
               />
 
-              {hoveredIndex === index && (
+              {hoveredIndex === idx && (
                 <div className={styles.cardActions}>
                   <button
                     className={`${styles.iconButton} ${styles.delete}`}
-                    onClick={() => setDeleteIndex(index)}
+                    onClick={() => setDeleteIndex(idx)}
                   >
                     <i className="fa-solid fa-trash"></i>
                   </button>
                   <button
                     className={`${styles.iconButton} ${styles.edit}`}
-                    onClick={() => onEdit(index, navigate)}
+                    onClick={() => onEdit(idx, navigate)}
                   >
                     <i className="fa-solid fa-pen"></i>
                   </button>
@@ -124,7 +127,11 @@ function AddContact({
               )}
 
               {contact.img && (
-                <img src={contact.img} alt={contact.user} className={styles.cardImg} />
+                <img
+                  src={contact.img}
+                  alt={contact.user}
+                  className={styles.cardImg}
+                />
               )}
               <h3 className={styles.contactsHeader}>{contact.user}</h3>
               <p className={styles.contactsEmails}>
@@ -141,7 +148,6 @@ function AddContact({
         </div>
       </div>
 
-
       {deleteIndex !== null && (
         <ConfirmModal
           message="Are you sure you want to delete this contact?"
@@ -150,12 +156,8 @@ function AddContact({
         />
       )}
 
-
       {viewContact && (
-        <ViewModal
-          contact={viewContact}
-          onClose={() => setViewContact(null)}
-        />
+        <ViewModal contact={viewContact} onClose={() => setViewContact(null)} />
       )}
     </div>
   );

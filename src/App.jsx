@@ -4,117 +4,93 @@ import {
   Route,
   useNavigate,
 } from "react-router-dom";
-import { useState, useEffect } from "react";
 import Nav from "./Components/Navbar/Nav";
 import AddContact from "./Components/AddContact/AddContact";
 import UserInfo from "./Components/UserInfo/UserInfo";
 import Search from "./Components/Search/Search";
+import { ContactsProvider, useContacts } from "./Context/ContactsContext";
 
-function App() {
-  const [contacts, setContacts] = useState(() => {
-    const storedContacts = localStorage.getItem("contacts");
-    return storedContacts ? JSON.parse(storedContacts) : [];
-  });
+function HomePage() {
+  const {
+    filteredContacts,
+    deleteContact,
+    startEdit,
+    selectedContacts,
+    toggleSelect,
+    deleteSelected,
+    deleteAll,
+    searchTerm,
+    setSearchTerm,
+  } = useContacts();
 
-  const [editData, setEditData] = useState(null);
-  const [editIndex, setEditIndex] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedContacts, setSelectedContacts] = useState([]);
+  const { contacts } = useContacts();
 
-  useEffect(() => {
-    localStorage.setItem("contacts", JSON.stringify(contacts));
-  }, [contacts]);
-
-  const addOrUpdateContact = (contact, navigate) => {
-    if (editData !== null && editIndex !== null) {
-      setContacts((prev) =>
-        prev.map((c, idx) => (idx === editIndex ? contact : c))
-      );
-      setEditData(null);
-      setEditIndex(null);
-    } else {
-      setContacts((prev) => [...prev, contact]);
-    }
-    navigate("/");
+  const mapFilteredIndexToOriginal = (filteredIndex) => {
+    const item = filteredContacts[filteredIndex];
+    return contacts.findIndex((c) => c === item);
   };
 
-  const deleteContact = (index) => {
-    setContacts((prev) => prev.filter((_, idx) => idx !== index));
+  const handleDelete = (filteredIndex) => {
+    const realIndex = mapFilteredIndexToOriginal(filteredIndex);
+    if (realIndex !== -1) deleteContact(realIndex);
   };
 
-  const deleteSelected = () => {
-    if (selectedContacts.length === 0) return;
-    setContacts((prev) =>
-      prev.filter((_, idx) => !selectedContacts.includes(idx))
-    );
-    setSelectedContacts([]);
+  const handleEdit = (filteredIndex, navigate) => {
+    const realIndex = mapFilteredIndexToOriginal(filteredIndex);
+    if (realIndex !== -1) startEdit(realIndex, navigate);
   };
 
-  const deleteAll = () => {
-    setContacts([]);
-    setSelectedContacts([]);
+  const handleToggleSelect = (filteredIndex) => {
+    const realIndex = mapFilteredIndexToOriginal(filteredIndex);
+    if (realIndex !== -1) toggleSelect(realIndex);
   };
 
-  const editContact = (index, navigate) => {
-    setEditData(contacts[index]);
-    setEditIndex(index);
-    navigate("/add");
+  const handleDeleteSelected = () => {
+    deleteSelected();
   };
 
-  const toggleSelect = (index) => {
-    setSelectedContacts((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    );
+  const handleDeleteAll = () => {
+    deleteAll();
   };
-
-  const filteredContacts = contacts.filter((contact) =>
-    contact.user.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
-    <Router>
-      <Nav />
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <>
-              <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-              <AddContact
-                contacts={filteredContacts}
-                onDelete={deleteContact}
-                onEdit={editContact}
-                selectedContacts={selectedContacts}
-                onToggleSelect={toggleSelect}
-                onDeleteSelected={deleteSelected}
-                onDeleteAll={deleteAll}
-              />
-            </>
-          }
-        />
-        <Route
-          path="/add"
-          element={
-            <UserInfoWrapper
-              addOrUpdateContact={addOrUpdateContact}
-              editData={editData}
-            />
-          }
-        />
-      </Routes>
-    </Router>
+    <>
+      <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      <AddContact
+        contacts={filteredContacts}
+        onDelete={handleDelete}
+        onEdit={handleEdit}
+        selectedContacts={selectedContacts}
+        onToggleSelect={handleToggleSelect}
+        onDeleteSelected={handleDeleteSelected}
+        onDeleteAll={handleDeleteAll}
+      />
+    </>
   );
 }
 
-function UserInfoWrapper({ addOrUpdateContact, editData }) {
+function UserInfoWrapper() {
+  const { addOrUpdateContact, editData } = useContacts();
   const navigate = useNavigate();
+
   return (
     <UserInfo
       onAdd={(contact) => addOrUpdateContact(contact, navigate)}
       editData={editData}
     />
-    //ready!
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <ContactsProvider>
+      <Router>
+        <Nav />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/add" element={<UserInfoWrapper />} />
+        </Routes>
+      </Router>
+    </ContactsProvider>
+  );
+}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./UserInfo.module.css";
 import img1 from "../../assets/1.jpg";
@@ -12,106 +12,84 @@ const images = [img1, img2, img3, img4, img5, img6];
 
 function UserInfo({ onAdd, editData }) {
   const navigate = useNavigate();
-
-  const [data, setData] = useState({
-    user: "",
-    email: "",
-    job: "",
-    phone: "",
-  });
-  const [errors, setErrors] = useState({
-    user: "",
-    email: "",
-    job: "",
-    phone: "",
-  });
+  const [data, setData] = useState({ user: "", email: "", job: "", phone: "" });
+  const [errors, setErrors] = useState({});
   const [selectedImg, setSelectedImg] = useState(null);
 
   useEffect(() => {
     if (editData) {
       setData({
-        user: editData.user,
-        email: editData.email,
-        job: editData.job,
-        phone: editData.phone,
+        user: editData.user || "",
+        email: editData.email || "",
+        job: editData.job || "",
+        phone: editData.phone || "",
       });
-      setSelectedImg(editData.img);
+      setSelectedImg(editData.img || null);
+    } else {
+      setData({ user: "", email: "", job: "", phone: "" });
+      setSelectedImg(null);
     }
   }, [editData]);
 
   const changeHandler = (e) => {
-    const name = e.target.name;
-    const value = e.target.value;
-    setData((prev) => ({ ...prev, [name]: value }));
+    const { name, value } = e.target;
+    setData((p) => ({ ...p, [name]: value }));
   };
 
   const validate = () => {
-    let tempErrors = {};
-    let isValid = true;
+    const temp = {};
+    let ok = true;
 
-    // Username validation
     if (!data.user) {
-      tempErrors.user = "Username is required";
-      isValid = false;
+      temp.user = "Username is required";
+      ok = false;
     } else if (data.user.length < 7) {
-      tempErrors.user = "Username must be at least 7 characters";
-      isValid = false;
+      temp.user = "Username must be at least 7 characters";
+      ok = false;
     } else if (!/[0-9!@#$%^&*]/.test(data.user)) {
-      tempErrors.user = "Username must include at least one number or symbol";
-      isValid = false;
-    } else {
-      tempErrors.user = "";
+      temp.user = "Username must include at least one number or symbol";
+      ok = false;
     }
 
-    // Email validation
     if (!data.email) {
-      tempErrors.email = "Email is required";
-      isValid = false;
+      temp.email = "Email is required";
+      ok = false;
     } else if (!/\S+@\S+\.\S+/.test(data.email)) {
-      tempErrors.email = "Email is invalid";
-      isValid = false;
-    } else {
-      tempErrors.email = "";
+      temp.email = "Email is invalid";
+      ok = false;
     }
 
-    // Job validation
     if (!data.job) {
-      tempErrors.job = "Job is required";
-      isValid = false;
-    } else {
-      tempErrors.job = "";
+      temp.job = "Job is required";
+      ok = false;
     }
 
-    // Phone validation (10 to 15 digits)
     if (!data.phone) {
-      tempErrors.phone = "Phone is required";
-      isValid = false;
+      temp.phone = "Phone is required";
+      ok = false;
     } else if (!/^\d{10,15}$/.test(data.phone)) {
-      tempErrors.phone = "Phone must be 10 to 15 digits";
-      isValid = false;
-    } else {
-      tempErrors.phone = "";
+      temp.phone = "Phone must be 10 to 15 digits";
+      ok = false;
     }
 
-    setErrors(tempErrors);
-    return isValid;
+    setErrors(temp);
+    return ok;
   };
 
   const uploadHandler = () => {
-    if (validate()) {
-      if (!selectedImg) {
-        alert("Please select an avatar image!");
-        return;
-      }
-      onAdd({ ...data, img: selectedImg });
-      navigate("/");
+    if (!validate()) return;
+    if (!selectedImg) {
+      alert("Please select an avatar image!");
+      return;
     }
+    if (typeof onAdd === "function") onAdd({ ...data, img: selectedImg });
   };
 
   const cancelHandler = () => {
     setData({ user: "", email: "", job: "", phone: "" });
-    setErrors({ user: "", email: "", job: "", phone: "" });
+    setErrors({});
     setSelectedImg(null);
+    navigate("/");
   };
 
   return (
