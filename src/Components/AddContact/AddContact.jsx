@@ -16,9 +16,9 @@ function AddContact({
   const navigate = useNavigate();
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
-  // مدال حذف تکی
+
   const [deleteIndex, setDeleteIndex] = useState(null);
-  // مدال نمایش جزئیات
+
   const [viewContact, setViewContact] = useState(null);
 
   const confirmDelete = () => {
@@ -28,7 +28,7 @@ function AddContact({
 
   const cancelDelete = () => setDeleteIndex(null);
 
-  // حذف گروهی بدون مدال
+
   const handleDeleteSelected = () => {
     if (selectedContacts.length === 0) return;
     onDeleteSelected();
@@ -141,7 +141,7 @@ function AddContact({
         </div>
       </div>
 
-      {/* مودال حذف تکی */}
+
       {deleteIndex !== null && (
         <ConfirmModal
           message="Are you sure you want to delete this contact?"
@@ -150,7 +150,7 @@ function AddContact({
         />
       )}
 
-      {/* مودال نمایش اطلاعات */}
+
       {viewContact && (
         <ViewModal
           contact={viewContact}

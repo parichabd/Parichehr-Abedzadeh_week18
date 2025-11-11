@@ -113,6 +113,7 @@ function UserInfoWrapper({ addOrUpdateContact, editData }) {
       onAdd={(contact) => addOrUpdateContact(contact, navigate)}
       editData={editData}
     />
+    //ready!
   );
 }
 
