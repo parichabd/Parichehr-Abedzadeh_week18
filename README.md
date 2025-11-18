@@ -77,3 +77,9 @@ Features adding, editing, deleting, searching, and bulk managing contacts with a
 ---
 
 
+## Contact
+
+If you have any questions, feel free to reach out:
+Email: parichehrabedzadeh@gmail.com
+
+GitHub: github.com/parichabd
