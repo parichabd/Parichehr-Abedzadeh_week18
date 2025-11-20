@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import InputField from "./InputField";
 import AvatarModal from "./AvatarModal.jsx";
 import styles from "./UserInfo.module.css";
+import defaultUser from "../../assets/d8b5d0a738295345ebd8934b859fa1fca1c8c6ad.jpeg";
 
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -114,9 +115,17 @@ function UserInfo({ onAdd, editData }) {
               placeholder="0123456789"
             />
 
-            <label>
-              Image:
-              {selectedImg ? <p>Image Selected</p> : <p>Image Not Selected</p>}
+            <div className={styles.imageSelectorWrapper}>
+              <label className={styles.imageLabel}>Image:</label>
+              {selectedImg ? (
+                <span className={styles.imageStatusSelected}>
+                  Image Selected
+                </span>
+              ) : (
+                <span className={styles.imageStatusNotSelected}>
+                  Image Not Selected
+                </span>
+              )}
               <button
                 type="button"
                 className={styles.select}
@@ -124,7 +133,7 @@ function UserInfo({ onAdd, editData }) {
               >
                 Select Image
               </button>
-            </label>
+            </div>
 
             <button type="submit" className={styles.button}>
               {editData ? "Update" : "Upload"}
@@ -133,7 +142,19 @@ function UserInfo({ onAdd, editData }) {
         </section>
 
         <section className={styles.rightContainer}>
-          <img src="/img/Main.png" alt="" />
+          {selectedImg ? (
+            <img
+              src={selectedImg}
+              alt="Selected avatar"
+              className={styles.selectedAvatar}
+            />
+          ) : (
+            <img
+              src={defaultUser}
+              alt="Default avatar"
+              className={styles.selectedAvatar}
+            />
+          )}
         </section>
       </div>
 

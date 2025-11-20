@@ -1,30 +1,99 @@
-.parentInforUser {
-  width: calc(100% - 6rem);
-  margin: 3rem auto;
-}
-
-.headeUserInfo {
-  color: #24a0ed;
-  font-weight: 300;
-  padding: 15px 0;
-}
-
-.paragUserInfo {
-  font-style: italic;
-  margin-bottom: 23px;
-  color: rgb(58, 58, 58);
-}
-
-.parentUserInfoPartTwo {
+.UserInfoContainer {
   display: flex;
-  gap: 100px;
+  justify-content: space-between;
+  gap: 40px;
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
-.inputInfo input {
-  display: grid;
-  grid-template-columns: 1, 1fr;
-  padding: 12px;
-  margin: 12px 0;
-  width: 400px;
-  border: 1px solid #fdda1d;
+.leftContainer {
+  flex: 1;
+}
+
+.rightContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 3px solid #24a0ed;
+  box-shadow: 0 0 10px rgba(36, 160, 237, 0.5);
+  background-color: #f5f9ff;
+}
+
+.selectedAvatar {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.titleTextCont h1 {
+  color: #24a0ed;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.titleTextCont p {
+  font-style: italic;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.imageLabel {
+  font-weight: 600;
+}
+
+.imageSelectorWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+.imageStatusSelected {
+  color: green;
+  font-weight: 600;
+}
+
+.imageStatusNotSelected {
+  color: red;
+  font-weight: 600;
+}
+
+.select {
+  padding: 8px 16px;
+  background-color: #24a0ed;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-weight: 600;
+}
+
+.select:hover {
+  background-color: #1b7cc7;
+}
+
+.button {
+  padding: 12px 0;
+  background-color: #28a745;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: background-color 0.3s ease;
+  margin-top: 15px;
+}
+
+.button:hover {
+  background-color: #218838;
 }
