@@ -1,218 +1,148 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import InputField from "./InputField";
+import AvatarModal from "./AvatarModal.jsx";
 import styles from "./UserInfo.module.css";
-import img1 from "../../assets/1.jpg";
-import img2 from "../../assets/2.jpg";
-import img3 from "../../assets/3.jpg";
-import img4 from "../../assets/4.jpg";
-import img5 from "../../assets/5.jpg";
-import img6 from "../../assets/6.jpg";
 
-const images = [img1, img2, img3, img4, img5, img6];
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+
+const schema = yup.object().shape({
+  user: yup
+    .string()
+    .required("Username is required")
+    .min(7, "Minimum 7 characters")
+    .matches(/[0-9!@#$%^&*]/, "Must include at least one number or symbol"),
+
+  email: yup
+    .string()
+    .required("Email is required")
+    .email("Invalid email format"),
+
+  job: yup.string().required("Job is required"),
+
+  phone: yup
+    .string()
+    .required("Phone is required")
+    .matches(/^\d{10,15}$/, "Phone must be 10–15 digits"),
+});
 
 function UserInfo({ onAdd, editData }) {
-  const navigate = useNavigate();
-  const [data, setData] = useState({ user: "", email: "", job: "", phone: "" });
-  const [errors, setErrors] = useState({});
-  const [selectedImg, setSelectedImg] = useState(null);
+  const [selectedImg, setSelectedImg] = useState("");
+  const [openModal, setOpenModal] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+    reset,
+  } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      user: "",
+      email: "",
+      job: "",
+      phone: "",
+    },
+  });
 
   useEffect(() => {
     if (editData) {
-      setData({
-        user: editData.user || "",
-        email: editData.email || "",
-        job: editData.job || "",
-        phone: editData.phone || "",
-      });
-      setSelectedImg(editData.img || null);
-    } else {
-      setData({ user: "", email: "", job: "", phone: "" });
-      setSelectedImg(null);
+      setValue("user", editData.user);
+      setValue("email", editData.email);
+      setValue("job", editData.job);
+      setValue("phone", editData.phone);
+      setSelectedImg(editData.img);
     }
-  }, [editData]);
+  }, [editData, setValue]);
 
-  const changeHandler = (e) => {
-    const { name, value } = e.target;
-    setData((p) => ({ ...p, [name]: value }));
-  };
-
-  const validate = () => {
-    const temp = {};
-    let ok = true;
-
-    if (!data.user) {
-      temp.user = "Username is required";
-      ok = false;
-    } else if (data.user.length < 7) {
-      temp.user = "Username must be at least 7 characters";
-      ok = false;
-    } else if (!/[0-9!@#$%^&*]/.test(data.user)) {
-      temp.user = "Username must include at least one number or symbol";
-      ok = false;
-    }
-
-    if (!data.email) {
-      temp.email = "Email is required";
-      ok = false;
-    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
-      temp.email = "Email is invalid";
-      ok = false;
-    }
-
-    if (!data.job) {
-      temp.job = "Job is required";
-      ok = false;
-    }
-
-    if (!data.phone) {
-      temp.phone = "Phone is required";
-      ok = false;
-    } else if (!/^\d{10,15}$/.test(data.phone)) {
-      temp.phone = "Phone must be 10 to 15 digits";
-      ok = false;
-    }
-
-    setErrors(temp);
-    return ok;
-  };
-
-  const uploadHandler = () => {
-    if (!validate()) return;
+  const onSubmit = (formData) => {
     if (!selectedImg) {
-      alert("Please select an avatar image!");
+      alert("Please select an avatar image");
       return;
     }
-    if (typeof onAdd === "function") onAdd({ ...data, img: selectedImg });
-  };
 
-  const cancelHandler = () => {
-    setData({ user: "", email: "", job: "", phone: "" });
-    setErrors({});
-    setSelectedImg(null);
-    navigate("/");
+    onAdd({
+      ...formData,
+      img: selectedImg,
+    });
+
+    reset();
+    setSelectedImg("");
   };
 
   return (
-    <div className={styles.parentInforUser}>
-      <h1 className={styles.headeUserInfo}>
-        {editData ? "Edit Contact" : "Add Contact"}
-      </h1>
-      <p className={styles.paragUserInfo}>
-        {editData
-          ? "Update the form below to edit the contact."
-          : "Fill out the form below to add a new contact."}
-      </p>
+    <>
+      <div className={styles.UserInfoContainer}>
+        <section className={styles.leftContainer}>
+          <div className={styles.titleTextCont}>
+            <h1>{editData ? "Edit User" : "Add User"}</h1>
+            <p className={styles.titleText}>Fill the form to continue</p>
+          </div>
 
-      <div className={styles.parentUserInfoPartTwo}>
-        <div className={styles.inputInfo}>
-          <label>
-            User Name:
-            <p style={{ fontSize: "10px", color: "green" }}>
-              7 characters, include number & symbol ✔
-            </p>
-            <input
-              type="text"
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <InputField
+              label="User Name"
               name="user"
+              register={register}
+              error={errors.user?.message}
               placeholder="Alex3&9"
-              value={data.user}
-              onChange={changeHandler}
             />
-          </label>
-          {errors.user && (
-            <p style={{ color: "red", fontSize: "10px" }}>{errors.user}</p>
-          )}
 
-          <label>
-            Email:
-            <input
-              type="text"
+            <InputField
+              label="Email"
               name="email"
+              register={register}
+              error={errors.email?.message}
               placeholder="abc@gmail.com"
-              value={data.email}
-              onChange={changeHandler}
             />
-          </label>
-          {errors.email && (
-            <p style={{ color: "red", fontSize: "10px" }}>{errors.email}</p>
-          )}
 
-          <label>
-            Job:
-            <input
-              type="text"
+            <InputField
+              label="Job"
               name="job"
+              register={register}
+              error={errors.job?.message}
               placeholder="Mechanic"
-              value={data.job}
-              onChange={changeHandler}
             />
-          </label>
-          {errors.job && (
-            <p style={{ color: "red", fontSize: "10px" }}>{errors.job}</p>
-          )}
 
-          <label>
-            Phone:
-            <input
-              type="text"
+            <InputField
+              label="Phone"
               name="phone"
+              register={register}
+              error={errors.phone?.message}
               placeholder="0123456789"
-              value={data.phone}
-              onChange={changeHandler}
-              maxLength={15}
             />
-          </label>
-          {errors.phone && (
-            <p style={{ color: "red", fontSize: "10px" }}>{errors.phone}</p>
-          )}
-        </div>
 
-        <div style={{ display: "grid", gap: "8px", margin: "15px 0" }}>
-          {images.map((img, index) => (
-            <img
-              key={index}
-              src={img}
-              alt={`avatar-${index}`}
-              style={{
-                width: "60px",
-                height: "60px",
-                borderRadius: "50%",
-                border:
-                  selectedImg === img ? "3px solid blue" : "1px solid gray",
-                cursor: "pointer",
-              }}
-              onClick={() => setSelectedImg(img)}
-            />
-          ))}
-        </div>
+            <label>
+              Image:
+              {selectedImg ? <p>Image Selected</p> : <p>Image Not Selected</p>}
+              <button
+                type="button"
+                className={styles.select}
+                onClick={() => setOpenModal(true)}
+              >
+                Select Image
+              </button>
+            </label>
+
+            <button type="submit" className={styles.button}>
+              {editData ? "Update" : "Upload"}
+            </button>
+          </form>
+        </section>
+
+        <section className={styles.rightContainer}>
+          <img src="/img/Main.png" alt="" />
+        </section>
       </div>
 
-      <button
-        onClick={uploadHandler}
-        style={{
-          padding: "12px",
-          borderRadius: "10px",
-          margin: "8px",
-          backgroundColor: "green",
-          color: "#fff",
-          cursor: "pointer",
-        }}
-      >
-        {editData ? "Update" : "Upload"}
-      </button>
-      <button
-        onClick={cancelHandler}
-        style={{
-          padding: "12px",
-          borderRadius: "10px",
-          margin: "8px",
-          backgroundColor: "red",
-          color: "#fff",
-          cursor: "pointer",
-        }}
-      >
-        Cancel
-      </button>
-    </div>
+      <AvatarModal
+        isOpen={openModal}
+        onClose={() => setOpenModal(false)}
+        onSelect={setSelectedImg}
+      />
+    </>
   );
 }
 
