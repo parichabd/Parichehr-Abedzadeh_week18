@@ -1,109 +1,248 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useReducer } from "react";
+import { toast } from "react-toastify";
 
 const ContactsContext = createContext(null);
 
-/* eslint-disable react-refresh/only-export-components */
-export function useContacts() {
-  const ctx = useContext(ContactsContext);
-  if (!ctx) throw new Error("useContacts must be used inside ContactsProvider");
-  return ctx;
+const ACTIONS = {
+  LOAD: "LOAD",
+  ADD: "ADD",
+  UPDATE: "UPDATE",
+  DELETE: "DELETE",
+  DELETE_SELECTED: "DELETE_SELECTED",
+  DELETE_ALL: "DELETE_ALL",
+  TOGGLE_SELECT: "TOGGLE_SELECT",
+  START_EDIT: "START_EDIT",
+  RESET_EDIT: "RESET_EDIT",
+  SET_SEARCH: "SET_SEARCH",
+  SET_CONTACTS: "SET_CONTACTS",
+};
+
+function ensureId(contact) {
+  return contact && contact.id != null
+    ? contact
+    : { ...contact, id: Date.now() + Math.random() };
 }
 
-export function ContactsProvider({ children }) {
-  const [contacts, setContacts] = useState(() => {
-    try {
-      const raw = localStorage.getItem("contacts");
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
+function reducer(state, action) {
+  switch (action.type) {
+    case ACTIONS.LOAD: {
+      return {
+        ...state,
+        contacts: action.payload.map((c) => ensureId(c)),
+      };
     }
-  });
 
-  const [selectedContacts, setSelectedContacts] = useState([]);
-  const [editData, setEditData] = useState(null);
-  const [editIndex, setEditIndex] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
+    case ACTIONS.ADD: {
+      const newContact = ensureId(action.payload);
+      return {
+        ...state,
+        contacts: [...state.contacts, newContact],
+      };
+    }
+
+    case ACTIONS.UPDATE: {
+      const { id, contact } = action.payload;
+      return {
+        ...state,
+        contacts: state.contacts.map((c) =>
+          c.id === id ? { ...contact, id } : c
+        ),
+        editData: null,
+        editIndex: null,
+      };
+    }
+
+    case ACTIONS.DELETE: {
+      const id = action.payload;
+      return {
+        ...state,
+        contacts: state.contacts.filter((c) => c.id !== id),
+        selectedContacts: state.selectedContacts.filter((sid) => sid !== id),
+      };
+    }
+
+    case ACTIONS.DELETE_SELECTED: {
+      const toDelete = new Set(state.selectedContacts);
+      return {
+        ...state,
+        contacts: state.contacts.filter((c) => !toDelete.has(c.id)),
+        selectedContacts: [],
+      };
+    }
+
+    case ACTIONS.DELETE_ALL: {
+      return {
+        ...state,
+        contacts: [],
+        selectedContacts: [],
+      };
+    }
+
+    case ACTIONS.TOGGLE_SELECT: {
+      const id = action.payload;
+      return {
+        ...state,
+        selectedContacts: state.selectedContacts.includes(id)
+          ? state.selectedContacts.filter((sid) => sid !== id)
+          : [...state.selectedContacts, id],
+      };
+    }
+
+    case ACTIONS.START_EDIT: {
+      const id = action.payload;
+      const contact = state.contacts.find((c) => c.id === id) ?? null;
+      return {
+        ...state,
+        editData: contact,
+        editIndex: state.contacts.findIndex((c) => c.id === id),
+      };
+    }
+
+    case ACTIONS.RESET_EDIT: {
+      return {
+        ...state,
+        editData: null,
+        editIndex: null,
+      };
+    }
+
+    case ACTIONS.SET_SEARCH: {
+      return {
+        ...state,
+        searchTerm: action.payload ?? "",
+      };
+    }
+
+    case ACTIONS.SET_CONTACTS: {
+      return {
+        ...state,
+        contacts: (action.payload || []).map((c) => ensureId(c)),
+      };
+    }
+
+    default:
+      return state;
+  }
+}
+
+const initialState = {
+  contacts: [],
+  selectedContacts: [],
+  editData: null,
+  editIndex: null,
+  searchTerm: "",
+};
+
+export function ContactsProvider({ children }) {
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
     try {
-      localStorage.setItem("contacts", JSON.stringify(contacts));
-    } catch {
-      (error) => error.message;
-    }
-  }, [contacts]);
+      const raw = localStorage.getItem("contacts");
+      if (raw) {
+        const parsed = JSON.parse(raw);
 
-  const addOrUpdateContact = (contact, navigate = null) => {
-    if (editIndex !== null && editData !== null) {
-      setContacts((prev) =>
-        prev.map((c, i) => (i === editIndex ? contact : c))
-      );
-      setEditData(null);
-      setEditIndex(null);
+        const normalized = parsed.map((c) => ensureId(c));
+        dispatch({ type: ACTIONS.LOAD, payload: normalized });
+      }
+    } catch (err) {
+      console.warn("Failed to load contacts from localStorage:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("contacts", JSON.stringify(state.contacts));
+    } catch (err) {
+      console.warn("Failed to write contacts to localStorage:", err);
+    }
+  }, [state.contacts]);
+
+  const addOrUpdateContact = (contact, navigate) => {
+    if (state.editData && state.editData.id != null) {
+      dispatch({
+        type: ACTIONS.UPDATE,
+        payload: { id: state.editData.id, contact },
+      });
+      toast.success("Contact updated");
     } else {
-      setContacts((prev) => [...prev, contact]);
+      dispatch({ type: ACTIONS.ADD, payload: contact });
+      toast.success("Contact added");
     }
     if (typeof navigate === "function") navigate("/");
   };
 
-  const deleteContact = (index) => {
-    setContacts((prev) => prev.filter((_, i) => i !== index));
-    setSelectedContacts((prev) => prev.filter((i) => i !== index));
+  const deleteContact = (id) => {
+    dispatch({ type: ACTIONS.DELETE, payload: id });
+    toast.success("Contact deleted");
   };
 
   const deleteSelected = () => {
-    if (selectedContacts.length === 0) return;
-    setContacts((prev) => prev.filter((_, i) => !selectedContacts.includes(i)));
-    setSelectedContacts([]);
+    if (state.selectedContacts.length === 0) return;
+    dispatch({ type: ACTIONS.DELETE_SELECTED });
+    toast.success("Selected contacts deleted");
   };
 
   const deleteAll = () => {
-    setContacts([]);
-    setSelectedContacts([]);
+    dispatch({ type: ACTIONS.DELETE_ALL });
+    toast.success("All contacts deleted");
   };
 
-  const toggleSelect = (index) => {
-    setSelectedContacts((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    );
+  const toggleSelect = (id) => {
+    dispatch({ type: ACTIONS.TOGGLE_SELECT, payload: id });
   };
 
-  const startEdit = (index, navigate) => {
-    setEditData(contacts[index] ?? null);
-    setEditIndex(index);
+  const startEdit = (id, navigate) => {
+    dispatch({ type: ACTIONS.START_EDIT, payload: id });
     if (typeof navigate === "function") navigate("/add");
   };
 
-  const filteredContacts = contacts.filter((c) => {
-    if (!c) return false;
-    const q = searchTerm.trim().toLowerCase();
-    if (!q) return true;
-    const name = (c.user || "").toLowerCase();
-    const email = (c.email || "").toLowerCase();
-    return name.includes(q) || email.includes(q);
-  });
+  const setSearchTerm = (q) => {
+    dispatch({ type: ACTIONS.SET_SEARCH, payload: q });
+  };
+
+  const resetEdit = () => dispatch({ type: ACTIONS.RESET_EDIT });
+
+  const filteredContacts = (function () {
+    const q = (state.searchTerm || "").trim().toLowerCase();
+    if (!q) return state.contacts;
+    return state.contacts.filter((c) => {
+      const name = (c.user || "").toLowerCase();
+      const email = (c.email || "").toLowerCase();
+      return name.includes(q) || email.includes(q);
+    });
+  })();
+
+  const value = {
+    contacts: state.contacts,
+    filteredContacts,
+    selectedContacts: state.selectedContacts,
+    editData: state.editData,
+    editIndex: state.editIndex,
+    searchTerm: state.searchTerm,
+
+    addOrUpdateContact,
+    deleteContact,
+    deleteSelected,
+    deleteAll,
+    toggleSelect,
+    startEdit,
+    setSearchTerm,
+    resetEdit,
+    dispatch,
+  };
 
   return (
-    <ContactsContext.Provider
-      value={{
-        contacts,
-        setContacts,
-        filteredContacts,
-        selectedContacts,
-        editData,
-        editIndex,
-        searchTerm,
-        setSearchTerm,
-        addOrUpdateContact,
-        deleteContact,
-        deleteSelected,
-        deleteAll,
-        toggleSelect,
-        startEdit,
-      }}
-    >
+    <ContactsContext.Provider value={value}>
       {children}
     </ContactsContext.Provider>
   );
+}
+
+export function useContacts() {
+  const ctx = useContext(ContactsContext);
+  if (!ctx) throw new Error("useContacts must be used inside ContactsProvider");
+  return ctx;
 }
 
 export default ContactsContext;

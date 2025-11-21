@@ -10,12 +10,13 @@ import UserInfo from "./Components/UserInfo/UserInfo";
 import Search from "./Components/Search/Search";
 import { ContactsProvider, useContacts } from "./Context/ContactsContext";
 
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function HomePage() {
   const {
     filteredContacts,
+    contacts,
     deleteContact,
     startEdit,
     selectedContacts,
@@ -25,41 +26,33 @@ function HomePage() {
     searchTerm,
     setSearchTerm,
   } = useContacts();
-
-  const { contacts } = useContacts();
-
-  const mapFilteredIndexToOriginal = (filteredIndex) => {
+  console.log(contacts);
+  const mapFilteredIndexToId = (filteredIndex) => {
     const item = filteredContacts[filteredIndex];
-    return contacts.findIndex((c) => c === item);
+    return item ? item.id : null;
   };
 
   const handleDelete = (filteredIndex) => {
-    const realIndex = mapFilteredIndexToOriginal(filteredIndex);
-    if (realIndex !== -1) {
-      deleteContact(realIndex);
-      toast.success("Deleted successfully!");
-    }
+    const id = mapFilteredIndexToId(filteredIndex);
+    if (id != null) deleteContact(id);
   };
 
   const handleEdit = (filteredIndex, navigate) => {
-    const realIndex = mapFilteredIndexToOriginal(filteredIndex);
-    if (realIndex !== -1) startEdit(realIndex, navigate);
+    const id = mapFilteredIndexToId(filteredIndex);
+    if (id != null) startEdit(id, navigate);
   };
 
   const handleToggleSelect = (filteredIndex) => {
-    const realIndex = mapFilteredIndexToOriginal(filteredIndex);
-    if (realIndex !== -1) toggleSelect(realIndex);
+    const id = mapFilteredIndexToId(filteredIndex);
+    if (id != null) toggleSelect(id);
   };
 
   const handleDeleteSelected = () => {
-    if (selectedContacts.length === 0) return;
     deleteSelected();
-    toast.success("Selected contacts deleted successfully!");
   };
 
   const handleDeleteAll = () => {
     deleteAll();
-    toast.success("All contacts have been deleted!");
   };
 
   return (
@@ -79,13 +72,14 @@ function HomePage() {
 }
 
 function UserInfoWrapper() {
-  const { addOrUpdateContact, editData } = useContacts();
+  const { addOrUpdateContact, editData, resetEdit } = useContacts();
   const navigate = useNavigate();
 
   return (
     <UserInfo
       onAdd={(contact) => addOrUpdateContact(contact, navigate)}
       editData={editData}
+      onCancelEdit={resetEdit}
     />
   );
 }
@@ -99,7 +93,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/add" element={<UserInfoWrapper />} />
         </Routes>
-        <ToastContainer position="top-right" autoClose={3000} />
+        <ToastContainer position="top-right" autoClose={2500} />
       </Router>
     </ContactsProvider>
   );
